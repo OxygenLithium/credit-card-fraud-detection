@@ -21,9 +21,6 @@ def evaluate_model(model, X_test, y_test, evaluation_config):
         else:
             print(f"Detected unexpected values {unique_vals}")
     
-    print("Unique y_test:", np.unique(y_test, return_counts=True))
-    print("Unique y_pred:", np.unique(y_pred, return_counts=True))
-    
     # Get probabilities if available
     y_proba = None
     if hasattr(model, 'predict_proba'):
@@ -168,7 +165,7 @@ def plot_evaluation_curves(evaluation_results, output_dir: str):
         for i, j in np.ndindex(cm.shape):
             plt.text(j, i, format(cm[i, j], 'd'),
                     ha="center", va="center",
-                    color="white")
+                    color="white" if cm[i, j] > thresh else "black")
         
         plt.ylabel('True Label')
         plt.xlabel('Predicted Label')

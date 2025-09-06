@@ -25,7 +25,7 @@ evaluation:
     folds: 5
   metrics: [average_precision, roc_auc, f1, precision, recall]
   threshold:
-    optimize_for: recall
+    optimize_for: f1
     search_space: [0.01, 0.99]
     steps: 200
 
