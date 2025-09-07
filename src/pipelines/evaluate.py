@@ -8,16 +8,23 @@ from utils.metrics import calculate_metrics, find_optimal_threshold
 import os
 from utils.io import create_dir
 
-def evaluate_model(model, X_test, y_test, evaluation_config):
+def evaluate_model(model, X_train, y_train, X_test, y_test, evaluation_config):
     print("Evaluating model...")
     
     y_pred = model.predict(X_test)
+    y_train_pred = model.predict(X_train)
 
     # Convert to binary
     unique_vals = np.unique(y_pred)
     if not set(unique_vals).issubset({0, 1}):
         if set(unique_vals).issubset({-1, 1}):
             y_pred = np.where(y_pred == -1, 1, 0)
+        else:
+            print(f"Detected unexpected values {unique_vals}")
+    unique_vals = np.unique(y_train_pred)
+    if not set(unique_vals).issubset({0, 1}):
+        if set(unique_vals).issubset({-1, 1}):
+            y_train_pred = np.where(y_train_pred == -1, 1, 0)
         else:
             print(f"Detected unexpected values {unique_vals}")
     
@@ -27,8 +34,14 @@ def evaluate_model(model, X_test, y_test, evaluation_config):
         y_proba = model.predict_proba(X_test)[:, 1]
     elif hasattr(model, 'decision_function'):
         y_proba = model.decision_function(X_test)
+    y_train_proba = None
+    if hasattr(model, 'predict_proba'):
+        y_train_proba = model.predict_proba(X_train)[:, 1]
+    elif hasattr(model, 'decision_function'):
+        y_train_proba = model.decision_function(X_train)
     
     metrics = calculate_metrics(y_test, y_pred, y_proba)
+    training_metrics = calculate_metrics(y_train, y_train_pred, y_train_proba)
     
     # Find optimal threshold if probabilities available
     threshold_info = None
@@ -55,6 +68,7 @@ def evaluate_model(model, X_test, y_test, evaluation_config):
     
     return {
         'metrics': metrics,
+        'training_metrics': training_metrics,
         'metrics_optimal': metrics_optimal if threshold_info else None,
         'threshold_info': threshold_info,
         'curves': curves,

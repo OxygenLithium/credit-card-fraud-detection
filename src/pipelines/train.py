@@ -1,18 +1,19 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import make_scorer, average_precision_score
-from utils.metrics import calculate_metrics
+from pipelines.factory import build_model
 
-def train_model(model, X_train, y_train, cv_config: dict):
+def train_model(model, X_train, y_train, cv_config, modelName, modelParams):
     print(f"Training {type(model).__name__}...")
     
     model.fit(X_train, y_train)
     print("Model trained successfully")
+    # Put in training accuracy
     
     # Cross-validation if enabled
     cv_scores = {}
     if cv_config.get('enabled', False):
-        cv_scores = perform_cross_validation(model, X_train, y_train, cv_config)
+        cv_scores = perform_cross_validation(X_train, y_train, cv_config, modelName, modelParams)
     
     return {
         'model': model,
@@ -21,11 +22,13 @@ def train_model(model, X_train, y_train, cv_config: dict):
         'feature_count': X_train.shape[1]
     }
 
-def perform_cross_validation(model, X_train, y_train, cv_config):
+def perform_cross_validation(X_train, y_train, cv_config, modelName, modelParams):
     folds = cv_config.get('folds', 5)
     cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=42)
 
     scorer = make_scorer(average_precision_score)
+
+    model = build_model(modelName, modelParams)
     
     print(f"Performing {folds}-fold cross-validation...")
     cv_scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scorer)

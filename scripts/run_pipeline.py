@@ -50,13 +50,15 @@ def run_pipeline(config_path):
     print(f"Data summary: {data_summary}")
     
     print("\nMODEL BUILDING")
-    model = build_model(config['model']['name'], config['model']['params'])
+    modelName = config['model']['name']
+    modelParams = config['model']['params']
+    model = build_model(modelName, modelParams)
     
     print("\nMODEL TRAINING")
-    training_results = train_model(model, X_train, y_train, config['evaluation']['cv'])
+    training_results = train_model(model, X_train, y_train, config['evaluation']['cv'], modelName, modelParams)
     
     print("\nMODEL EVALUATION:")
-    evaluation_results = evaluate_model(model, X_test, y_test, config['evaluation'])
+    evaluation_results = evaluate_model(model, X_train, y_train, X_test, y_test, config['evaluation'])
     
     if config['outputs'].get('save_plots', True):
         print("\nGENERATING VISUALIZATIONS")
@@ -84,6 +86,7 @@ def run_pipeline(config_path):
             },
             'evaluation_results': {
                 'metrics': evaluation_results['metrics'],
+                'training_metrics': evaluation_results['training_metrics'],
                 'metrics_optimal': evaluation_results['metrics_optimal'],
                 'threshold_info': evaluation_results['threshold_info']
             }
